@@ -49,8 +49,8 @@ public class BuildingAPI {
 //		return buildingDTO;
 //	}
 
-	@DeleteMapping("/api/building/{id}")
-	public void deleteBuilding(@PathVariable Integer id) {
-		System.out.println("Da xoa toa nha co id la " + id + " roi nha!");
-	}
+//	@DeleteMapping("/api/building/{id}")
+//	public void deleteBuilding(@PathVariable Integer id) {
+//		System.out.println("Da xoa toa nha co id la " + id + " roi nha!");
+//	}
 }
