@@ -22,7 +22,7 @@ public class BuildingRepositoryImpl implements BuildingRepository {
 	static final String PASS = "23062004aA@";
 
 	@Override
-	public List<BuildingEntity> findAll(Map<String, Object> params) {
+	public List<BuildingEntity> findAll(Map<String, Object> params, List<String> typeCode) {
 		// TODO Auto-generated method stub
 		StringBuilder sql = new StringBuilder("SELECT * FROM building b WHERE 1 = 1 ");
 		List<BuildingEntity> result = new ArrayList<>();
