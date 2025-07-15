@@ -8,20 +8,19 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Repository;
 
 import com.javaweb.model.BuildingDTO;
 import com.javaweb.repository.BuildingRepository;
 import com.javaweb.repository.entity.BuildingEntity;
+import com.javaweb.utils.ConnectionJDBCUtil;
 import com.javaweb.utils.NumberUtil;
 import com.javaweb.utils.StringUtil;
 
 @Repository
 public class BuildingRepositoryImpl implements BuildingRepository {
-	static final String DB_URL = "jdbc:mysql://localhost:3306/estatebasic";
-	static final String USER = "root";
-	static final String PASS = "23062004aA@";
 
 	public static void joinTable(Map<String, Object> params, List<String> typeCode, StringBuilder sql) {
 		String staffId = (String) params.get("staffId");
@@ -31,11 +30,6 @@ public class BuildingRepositoryImpl implements BuildingRepository {
 		if (typeCode != null && typeCode.size() != 0) {
 			sql.append(" INNER JOIN buildingrenttype ON b.id = buildingrenttype.buildingid ");
 			sql.append(" INNER JOIN renttype ON renttype.id = buildingrenttype.renttypeid ");
-		}
-		String rentAreaTo = (String) params.get("areaTo");
-		String rentAreaFrom = (String) params.get("areaFrom");
-		if (StringUtil.checkString(rentAreaTo) == true || StringUtil.checkString(rentAreaFrom) == true) {
-			sql.append(" INNER JOIN rentarea ON rentarea.buildingid = b.id");
 		}
 	}
 
@@ -64,12 +58,14 @@ public class BuildingRepositoryImpl implements BuildingRepository {
 		String rentAreaTo = (String) params.get("areaTo");
 		String rentAreaFrom = (String) params.get("areaFrom");
 		if (StringUtil.checkString(rentAreaTo) == true || StringUtil.checkString(rentAreaFrom) == true) {
+			where.append(" AND EXISTS (SELECT * FROM rentarea r WHERE b.id = r.buildingid ");
 			if (StringUtil.checkString(rentAreaFrom)) {
-				where.append(" AND rentarea.value >= " + rentAreaFrom);
+				where.append(" AND r.value >= " + rentAreaFrom);
 			}
 			if (StringUtil.checkString(rentAreaTo)) {
-				where.append(" AND rentarea.value <= " + rentAreaTo);
+				where.append(" AND r.value <= " + rentAreaTo);
 			}
+			where.append(") ");
 		}
 		String rentPriceTo = (String) params.get("rentPriceTo");
 		String rentPriceFrom = (String) params.get("rentPriceFrom");
@@ -81,13 +77,21 @@ public class BuildingRepositoryImpl implements BuildingRepository {
 				where.append(" AND b.rentprice <= " + rentPriceTo);
 			}
 		}
-		//java 7
+		// java 7
+//		if (typeCode != null && typeCode.size() != 0) {
+//			List<String> code = new ArrayList<>();
+//			for (String item : typeCode) {
+//				code.add("'" + item + "'");
+//			}
+//			where.append(" AND renttype.code IN(" + String.join(",", code) + ")");
+//		}
+		// java 8
 		if (typeCode != null && typeCode.size() != 0) {
-			List<String> code = new ArrayList<>();
-			for(String item : typeCode) {
-				code.add("'" + item + "'");
-			}
-			where.append(" AND renttype.code IN(" + String.join(",", code) + ")");
+			where.append(" AND(");
+			String sql = typeCode.stream().map(it -> "renttype.code LIKE" + "'%" + it + "%'")
+					.collect(Collectors.joining(" OR"));
+			where.append(sql);
+			where.append(" ) ");
 		}
 	}
 
@@ -104,7 +108,7 @@ public class BuildingRepositoryImpl implements BuildingRepository {
 		where.append(" GROUP BY b.id;");
 		sql.append(where);
 		List<BuildingEntity> result = new ArrayList<>();
-		try (Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+		try (Connection conn = ConnectionJDBCUtil.getConnection();
 				Statement stmt = conn.createStatement();
 				ResultSet rs = stmt.executeQuery(sql.toString());) {
 			while (rs.next()) {
