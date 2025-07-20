@@ -30,8 +30,6 @@ public class BuildingEntity {
 	@Column(name = "street")
 	private String street;
 
-
-
 	@Column(name = "managername")
 	private String managerName;
 
@@ -103,8 +101,6 @@ public class BuildingEntity {
 	public void setStreet(String street) {
 		this.street = street;
 	}
-
-
 
 	public String getManagerName() {
 		return managerName;
